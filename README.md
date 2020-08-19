@@ -54,7 +54,7 @@ Output:
     │   └── rgi_amr.tsv 
     ├── 3_proteinortho
     │   └── plasmid_network.proteinortho.tsv 
-    └── 4_graph_viz
+    └── 4_network_viz
         └── network.png 
 
 Example:
