@@ -55,7 +55,7 @@ Output:
     ├── 3_proteinortho
     │   └── plasmid_network.proteinortho.tsv 
     └── 4_graph_viz
-        └── graph.png 
+        └── network.png 
 
 Example:
 
