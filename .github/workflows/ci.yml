@@ -1,5 +1,7 @@
+---
 name: CI
-# This workflow runs the pipeline with the minimal test dataset to check that it completes without any syntax errors
+# This workflow runs the pipeline with the minimal test dataset to check that
+# it completes without any syntax errors
 on:
   push:
     branches:
@@ -20,9 +22,10 @@ jobs:
         with:
           auto-update-conda: true
           python-version: 3.7
-        - name: Conda info
-          shell: bash -l {0}
-          run: conda info
+
+      - name: Conda info
+        shell: bash -l {0}
+        run: conda info
 
       - name: Install Nextflow
         run: |
