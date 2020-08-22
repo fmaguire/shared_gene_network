@@ -1,4 +1,4 @@
-![GitHub Actions CI Status](https://github.com/fmaguire/shared_gene_network/workflows/ci.yml/badge.svg)
+![GitHub Actions CI Status](https://github.com/fmaguire/shared_gene_network/workflows/CI/badge.svg)
 
 # Shared Gene Network Visualiser
 
