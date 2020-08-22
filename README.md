@@ -31,7 +31,7 @@ Install nextflow (requires Java 8 or later and conda):
 
 Execute workflow (in this example on test data), only input is folder containing fasta files
 
-    ./nextflow run shared_gene_network.nf --input_sequences test/data
+    ./nextflow run main.nf --input_sequences test/data
 
 Output:
     

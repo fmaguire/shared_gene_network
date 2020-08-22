@@ -89,20 +89,23 @@ process generate_graph {
 
 
 workflow {
-
+    
+    // Detect ORFs and translate proteins using prodigal
     input_ch = Channel.fromPath( params.input_sequences + "/*.{fa,fasta,fna}" )
     get_proteins( input_ch )
     proteins = get_proteins.out.collect()
     
-    combine_all_ORFs( proteins )      
-    ORFs = combine_all_ORFs.out
-
+    // Collate all ORFs and annotate them for AMR (using CARD+RGI)
+    // and VFs (using VFDB+BLASTP)
+    ORFs = combine_all_ORFs( proteins )      
     amr = annotate_amr( ORFs )
     vf =  annotate_vf( ORFs )
-
+    
+    // Predict orthologues 
     orthos = run_proteinortho( proteins )
     
+    // Use networkx script to generate shared gene network and highlight with
+    // amr and vf annotations
     generate_graph( orthos.combine(amr).combine(vf) )
-
 
 }
