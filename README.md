@@ -1,3 +1,5 @@
+[![GitHub Actions CI Status](https://github.com/fmaguire/shared_gene_network/workflows/ci/badge.svg)
+
 # Shared Gene Network Visualiser
 
 Workflow that identifies and plots the shared gene network between different
