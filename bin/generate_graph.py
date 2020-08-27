@@ -90,7 +90,7 @@ def run(args):
         G.edges[edge]['type'] = 'neither'
 
 
-    pos = nx.spring_layout(G, weight='unique_genes')  # positions for all nodes
+    pos = nx.spring_layout(G, weight='unique_genes', seed=42)  # positions for all nodes
 
     # nodes
     nx.draw_networkx_nodes(G, pos, node_size=101, node_color='grey')
