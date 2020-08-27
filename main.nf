@@ -1,6 +1,21 @@
 #!/usr/bin/env nextflow 
 nextflow.enable.dsl=2
 
+def helpMessage() {
+    log.info """
+
+\nUsage:
+The typical command for running the pipeline is as follows:
+nextflow run fmaguire/shared_gene_network --input_sequences data
+Mandatory arguments:
+    --input_sequences                       Path to input data: folder containing FASTA formatted genomes/contigs
+
+Optional arguments:
+    --cpus								    Number of CPUs to assign to executor\n
+
+	"""
+}
+
 process get_proteins {
     publishDir "results/1_orf_prediction", pattern: "*.faa", mode: 'copy'
     conda "$baseDir/conda_envs/prodigal.yml"
@@ -55,8 +70,9 @@ process annotate_vf {
         wget http://www.mgc.ac.cn/VFs/Down/VFDB_setB_pro.fas.gz 
         gunzip VFDB_setB_pro.fas.gz
         makeblastdb -in VFDB_setB_pro.fas -dbtype prot
-        blastp -query $all_ORFs -db VFDB_setB_pro.fas -num_threads ${task.cpus} -outfmt 6 -max_target_seqs 1 -evalue 1e-10 > blast_vfs.tsv
+        blastp -query $all_ORFs -db VFDB_setB_pro.fas -num_threads ${task.cpus} -outfmt 6 -max_target_seqs 1 -evalue 1e-25 > blast_vfs.tsv
         """
+        //sed -i 's|) (|)_(|' VFDB_setB_pro.fas
 }
 
 
@@ -89,9 +105,22 @@ process generate_graph {
 
 
 workflow {
+
+	if (params.help) {
+		helpMessage()
+		exit 0
+	}
+    
+    if (!params.input_sequences) {
+        println("\nMust provide folder of FASTA contigs/genomes/plasmids as --input_sequences\n")
+        helpMessage()
+        exit 1
+    }
     
     // Detect ORFs and translate proteins using prodigal
     input_ch = Channel.fromPath( params.input_sequences + "/*.{fa,fasta,fna}" )
+                .ifEmpty { error "\nCannot find any FASTA formatted sequences in ${params.input_sequences}\n" }
+    
     get_proteins( input_ch )
     proteins = get_proteins.out.collect()
     

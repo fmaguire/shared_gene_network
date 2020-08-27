@@ -1,0 +1,4 @@
+a b {'unique_genes': 1, 'amr_set': {'NDM-2'}, 'vf_set': set(), 'type': 'amr_only'}
+a c {'unique_genes': 2, 'amr_set': {'NDM-2'}, 'vf_set': {'VFG048639(gb|YP_005226598.1)'}, 'type': 'amr_and_vf'}
+b c {'unique_genes': 1, 'amr_set': {'NDM-2'}, 'vf_set': set(), 'type': 'amr_only'}
+b d {'unique_genes': 1, 'amr_set': set(), 'vf_set': set(), 'type': 'neither'}

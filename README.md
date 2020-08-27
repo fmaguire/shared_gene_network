@@ -31,9 +31,9 @@ Install nextflow (requires Java 8 or later and conda):
 
     curl -s https://get.nextflow.io | bash
 
-Execute workflow (in this example on test data), only input is folder containing fasta files
+Execute workflow (in this example on test data with 7 CPUs), only input is folder containing fasta files
 
-    ./nextflow run main.nf --input_sequences test/data
+    ./nextflow run main.nf --input_sequences test/data --cpus 7
 
 Output:
     
