@@ -11,13 +11,18 @@ Mandatory arguments:
     --input_sequences                       Path to input data: folder containing FASTA formatted genomes/contigs
 
 Optional arguments:
+    --outdir                                Path to output results into (default: "results")
+    --metadata_tsv                          Path to metadata TSV containing a column "name" with\n
+                                            the filename of each FASTA input (without extension)\n
+    --metadata_col                          Column in --metadata_tsv to use to annotate nodes/FASTA\n
+                                            in the network visualisation\n
     --cpus								    Number of CPUs to assign to executor\n
 
 	"""
 }
 
 process get_proteins {
-    publishDir "results/1_orf_prediction", pattern: "*.faa", mode: 'copy'
+    publishDir "results/1_orf_prediction", pattern: "*.faa"
     conda "$baseDir/conda_envs/prodigal.yml"
     input:
         path fasta 
@@ -30,7 +35,7 @@ process get_proteins {
 }
 
 process combine_all_ORFs {
-    publishDir "results/2a_all_orfs", pattern: "all_orfs.faa", mode: 'copy'
+    publishDir "results/2a_all_orfs", pattern: "all_orfs.faa"
     input:
         path all_fasta_aa
     output:
@@ -43,7 +48,7 @@ process combine_all_ORFs {
 
 
 process annotate_amr {
-    publishDir 'results/2b_annotations', pattern: "*.tsv", mode: 'copy'
+    publishDir 'results/2b_annotations', pattern: "*.tsv"
     conda "$baseDir/conda_envs/rgi.yml"
     input:
         path all_ORFs
@@ -59,7 +64,7 @@ process annotate_amr {
 
 
 process annotate_vf {
-    publishDir 'results/2b_annotations', pattern: "*.tsv", mode: 'copy'
+    publishDir 'results/2b_annotations', pattern: "*.tsv"
     conda "$baseDir/conda_envs/blast.yml"
     input:
         path all_ORFs
@@ -72,12 +77,11 @@ process annotate_vf {
         makeblastdb -in VFDB_setB_pro.fas -dbtype prot
         blastp -query $all_ORFs -db VFDB_setB_pro.fas -num_threads ${task.cpus} -outfmt 6 -max_target_seqs 1 -evalue 1e-25 > blast_vfs.tsv
         """
-        //sed -i 's|) (|)_(|' VFDB_setB_pro.fas
 }
 
 
 process run_proteinortho {
-    publishDir 'results/3_proteinortho', pattern: "*.tsv", mode: 'copy'
+    publishDir 'results/3_proteinortho', pattern: "*.tsv"
     conda "$baseDir/conda_envs/proteinortho.yml"
     input:
         path all_aa
@@ -89,18 +93,44 @@ process run_proteinortho {
         """
 }
 
-
-process generate_graph {
-    publishDir 'results/4_network_viz', pattern: "network.png", mode: 'copy'
+process generate_graph_no_metadata {
+    publishDir 'results/4_network_viz', pattern: "network.{pkl,png}"
     conda "$baseDir/conda_envs/graph.yml"
     input:
         tuple path(proteinortho), path(rgi_amr), path(vf_out6)
     output:
-        path "network.png"
+        tuple path("network.png"), path("network.pkl")
     script:
         """
         generate_graph.py --proteinortho_output $proteinortho --rgi_output $rgi_amr --vf_blast_output $vf_out6
         """
+}
+
+process generate_graph_metadata {
+    publishDir 'results/4_network_viz', pattern: "network.{pkl,png}"
+    conda "$baseDir/conda_envs/graph.yml"
+    input:
+        tuple path(proteinortho), path(rgi_amr), path(vf_out6), path(metadata_tsv)
+        val(metadata_col)
+    output:
+        tuple path("network.png"), path("network.pkl")
+    script:
+        """
+        generate_graph.py --proteinortho_output $proteinortho --rgi_output $rgi_amr --vf_blast_output $vf_out6 --seq_metadata $metadata_tsv --metadata_col $metadata_col
+        """
+}
+
+process plot_interactive {
+    publishDir 'results/4_network_viz', pattern: "network.html"
+    conda "$baseDir/conda_envs/graph.yml"
+    input:
+        tuple path(network_png), path(network_pickle)
+    output:
+        path "network.html"
+    script:
+        """
+        plot_interactive_network.py --networkx_pickle ${network_pickle}
+        """ 
 }
 
 
@@ -116,7 +146,6 @@ workflow {
         helpMessage()
         exit 1
     }
-    
     // Detect ORFs and translate proteins using prodigal
     input_ch = Channel.fromPath( params.input_sequences + "/*.{fa,fasta,fna}" )
                 .ifEmpty { error "\nCannot find any FASTA formatted sequences in ${params.input_sequences}\n" }
@@ -135,6 +164,20 @@ workflow {
     
     // Use networkx script to generate shared gene network and highlight with
     // amr and vf annotations
-    generate_graph( orthos.combine(amr).combine(vf) )
+    if (params.metadata_tsv && params.metadata_col ) {
+        metadata = Channel.fromPath( params.metadata_tsv )
+        graph_pickle = generate_graph_metadata( orthos
+                                                .combine(amr)
+                                                .combine(vf)
+                                                .combine(metadata),
+                                                params.metadata_col)
+    } else {
+        graph_pickle = generate_graph_no_metadata( orthos
+                                                    .combine(amr)
+                                                    .combine(vf) )
+    }
+
+    // use pyvis/visjs to create interactive version
+    plot_interactive( graph_pickle )
 
 }

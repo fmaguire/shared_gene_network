@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import argparse
 import itertools
+import sys
 
 def run(args):
     # parse RGI and index with simplified ORF name for lookup
@@ -23,8 +24,24 @@ def run(args):
     # remove any ORF that is only in one sample
     poff_df = poff_df[poff_df['# Species'] > 1]
 
+    if args.seq_metadata:
+        metadata_df = pd.read_csv(args.seq_metadata, sep='\t')
+        metadata_df = metadata_df.set_index('name')
+        metadata_annotate = metadata_df[args.metadata_col].to_dict()
+    else:
+        metadata_annotate = None
+
     # create graph with each plasmid as a node
     G = nx.Graph()
+    for node in [x for x in poff_df.columns[3:]]:
+        if metadata_annotate:
+            if node in metadata_annotate:
+                G.add_node(node, metadata = metadata_annotate[node])
+            else:
+                print(f"WARNING: {node} not present in 'name' column of {args.seq_metadata}", file=sys.stderr)
+                G.add_node(node, metadata = "None")
+        else:
+            G.add_node(node)
     G.add_nodes_from([x for x in poff_df.columns[3:]])
 
     for index, ortho in poff_df.iterrows():
@@ -53,7 +70,8 @@ def run(args):
         for edge in all_edges:
             # add edge if it doesn't already exist create it as null edge
             if not G.has_edge(*edge):
-                G.add_edge(*edge, unique_genes=0, amr_set = set(), vf_set = set())
+                G.add_edge(*edge, unique_genes=0, amr_set = set(),
+                            vf_set = set(), other_genes = set())
 
             G.edges[edge]['unique_genes'] += 1
 
@@ -64,9 +82,8 @@ def run(args):
             if len(vf_hits) > 0:
                 G.edges[edge]['vf_set'].update(vf_hits)
 
-    print()
-    for x in G.edges.data():
-        print(x)
+            if len(other_genes) > 0:
+                G.edges[edge]['other_genes'].update(other_genes)
 
     # colour edges green if shared genes between plasmids include an AMR gene
     # dash the line if shared gene between plasmids include a VF gene
@@ -88,6 +105,12 @@ def run(args):
         G.edges[edge]['type'] = 'vf_only'
     for edge in neither:
         G.edges[edge]['type'] = 'neither'
+
+    # change set to lists to allow serialising
+    for edge in G.edges:
+        G.edges[edge]['amr_set'] = list(G.edges[edge]['amr_set'])
+        G.edges[edge]['vf_set'] = list(G.edges[edge]['vf_set'])
+        G.edges[edge]['other_genes'] = list(G.edges[edge]['other_genes'])
 
 
     pos = nx.spring_layout(G, weight='unique_genes', seed=42)  # positions for all nodes
@@ -123,9 +146,21 @@ def run(args):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Generate highlighted orthology graph')
-    parser.add_argument('--proteinortho_output', help='TSV output from proteinortho')
-    parser.add_argument('--rgi_output', help='TSV output from RGI')
-    parser.add_argument('--vf_blast_output', help='TSV output BLASTP vs VFDB')
+    parser.add_argument('--proteinortho_output', help='TSV output from proteinortho',
+                        required=True)
+    parser.add_argument('--rgi_output', help='TSV output from RGI',
+                        required=True)
+    parser.add_argument('--vf_blast_output', help='TSV output BLASTP vs VFDB',
+                        required=True)
+    parser.add_argument('--seq_metadata', default=None, help="TSV containing metadata (in '--metadata $column') to annotate each fasta ('name' column)")
+    parser.add_argument('--metadata_col', default=None, help="Metadata column to use to annotate")
+
+
     args = parser.parse_args()
 
+    if args.seq_metadata:
+        if not args.metadata_col:
+            print("\nIf --seq_metadata supplied then --metadata_col must be specified\n", file=sys.stderr)
+            parser.print_help(sys.stderr)
+            sys.exit(1)
     run(args)
