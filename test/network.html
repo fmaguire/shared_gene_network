@@ -1,0 +1,80 @@
+<html>
+<head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis.css" type="text/css" />
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis-network.min.js"> </script>
+<center>
+<h1>Shared Gene Network</h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+
+<style type="text/css">
+
+        #mynetwork {
+            width: 1080px;
+            height: 1080px;
+            background-color: #ffffff;
+            border: 1px solid lightgray;
+            position: relative;
+            float: left;
+        }
+
+        
+
+        
+
+        
+</style>
+
+</head>
+
+<body>
+<div id = "mynetwork"></div>
+
+
+<script type="text/javascript">
+
+    // initialize global variables.
+    var edges;
+    var nodes;
+    var network; 
+    var container;
+    var options, data;
+
+    
+    // This method is responsible for drawing the graph, returns the drawn network
+    function drawGraph() {
+        var container = document.getElementById('mynetwork');
+        
+        
+
+        // parsing and collecting nodes and edges from the python
+        nodes = new vis.DataSet([{"group": "animal", "id": "a", "label": " ", "shape": "dot", "size": 10, "title": "A: animal"}, {"group": "clinical", "id": "b", "label": " ", "shape": "dot", "size": 10, "title": "B: clinical"}, {"group": "environmental", "id": "c", "label": " ", "shape": "dot", "size": 10, "title": "C: environmental"}, {"group": "environmental", "id": "d", "label": " ", "shape": "dot", "size": 10, "title": "D: environmental"}, {"fixed": true, "id": "Node Legend", "label": "Node Legend", "physics": false, "shape": "box", "size": 10, "x": -490.0, "y": -490.0}, {"fixed": true, "group": "animal", "id": "animal", "label": "animal", "physics": false, "shape": "dot", "size": 10, "x": -490.0, "y": -420.0}, {"fixed": true, "group": "environmental", "id": "environmental", "label": "environmental", "physics": false, "shape": "dot", "size": 10, "x": -490.0, "y": -350.0}, {"fixed": true, "group": "clinical", "id": "clinical", "label": "clinical", "physics": false, "shape": "dot", "size": 10, "x": -490.0, "y": -280.0}, {"fixed": true, "id": "Edge Legend", "label": "Edge Legend", "physics": false, "shape": "box", "size": 10, "x": 540.0, "y": -490.0}, {"color": "green", "fixed": true, "id": "AMR in shared genes", "label": "AMR in shared genes", "physics": false, "shape": "square", "size": 10, "x": 540.0, "y": -440.0}, {"color": "orange", "fixed": true, "id": "VF in shared genes", "label": "VF in shared genes", "physics": false, "shape": "square", "size": 10, "x": 540.0, "y": -390.0}, {"color": "purple", "fixed": true, "id": "AMR \u0026 VF in shared genes", "label": "AMR \u0026 VF in shared genes", "physics": false, "shape": "square", "size": 10, "x": 540.0, "y": -340.0}, {"color": "black", "fixed": true, "id": "Non-AMR/VF shared genes", "label": "Non-AMR/VF shared genes", "physics": false, "shape": "square", "size": 10, "x": 540.0, "y": -290.0}]);
+        edges = new vis.DataSet([{"color": "green", "from": "a", "group": "amr_only", "length": 6, "title": "Unique Shared Genes: 1; AMR: [\u0027NDM-2\u0027]; VF: []", "to": "b", "weight": 1, "width": 2.5}, {"color": "purple", "from": "a", "group": "amr_and_vf", "length": 5, "title": "Unique Shared Genes: 2; AMR: [\u0027NDM-2\u0027]; VF: [\u0027VFG048639(gb|YP_005226598.1)\u0027]", "to": "c", "weight": 1, "width": 2.5}, {"color": "green", "from": "b", "group": "amr_only", "length": 6, "title": "Unique Shared Genes: 1; AMR: [\u0027NDM-2\u0027]; VF: []", "to": "c", "weight": 1, "width": 2.5}, {"color": "black", "from": "b", "group": "neither", "length": 6, "title": "Unique Shared Genes: 1; AMR: []; VF: []", "to": "d", "weight": 1, "width": 2.5}]);
+
+        // adding nodes and edges to the graph
+        data = {nodes: nodes, edges: edges};
+
+        var options = {"edges": {"arrowStrikethrough": false, "color": {"inherit": true}, "smooth": false}, "interaction": {"hover": true, "navigationButtons": true, "tooltipDelay": 175}};
+        
+        
+
+        
+
+        network = new vis.Network(container, data, options);
+
+        
+
+
+        
+
+        return network;
+
+    }
+
+    drawGraph();
+
+</script>
+</body>
+</html>
