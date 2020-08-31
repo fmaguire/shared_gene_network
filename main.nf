@@ -72,10 +72,10 @@ process annotate_vf {
         path "blast_vfs.tsv"
     script:
         """
-        wget http://www.mgc.ac.cn/VFs/Down/VFDB_setB_pro.fas.gz 
-        gunzip VFDB_setB_pro.fas.gz
-        makeblastdb -in VFDB_setB_pro.fas -dbtype prot
-        blastp -query $all_ORFs -db VFDB_setB_pro.fas -num_threads ${task.cpus} -outfmt 6 -max_target_seqs 1 -evalue 1e-25 > blast_vfs.tsv
+        wget http://www.mgc.ac.cn/VFs/Down/VFDB_setA_pro.fas.gz
+        gunzip VFDB_setA_pro.fas.gz
+        makeblastdb -in VFDB_setA_pro.fas -dbtype prot
+        blastp -query $all_ORFs -db VFDB_setA_pro.fas -num_threads ${task.cpus} -outfmt 6 -max_target_seqs 1 -evalue 1e-25 > blast_vfs.tsv
         """
 }
 
