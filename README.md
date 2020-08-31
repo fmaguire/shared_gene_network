@@ -87,4 +87,4 @@ Example:
 
 ![Shared gene network](test/network.png)
 
-![Interactive network visualisation](test/network.html)
+![Interactive network visualisation](https://finlaymagui.re/assets/shared_gene_network_example.html)
